@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>SimpleChatter</title>
+		<script src="/Scripts/jquery-1.6.4.js"></script>
+		<script src="/Scripts/jquery.signalR-2.2.0.js"></script>
+		<script src="signalr/hubs"></script>
+		<link rel="stylesheet" href="/Stylesheets/bootstrap.min.css"/>
+		<script>
+			$(function () {
+				var userName = prompt('Please enter a user name:', 'Test User');
+				var chat = $.connection.chatHub;
+				var $log = $('#chatLog');
+				chat.client.broadcastMessage = function (name, message) {
+					var nameMessagePair = $('<div></div>')
+						.append($('<span></span>').addClass('badge badge-default').text(name))
+						.append($('<span></span>').text(' ' + message));
+					$log.append(nameMessagePair);
+					$log.prop('scrollTop', $log.prop('scrollHeight'));
+				};
+
+				var $input = $('#messageInput').focus();
+				var $form = $('#messageForm');
+				$.connection.hub.start().done(function () {
+					$form.submit(function (e) {
+						chat.server.send(userName, $input.val());
+						$input.val('').focus();
+						return false;
+					});
+				});
+			});
+		</script>
+		<style>
+			#chatLog {
+				height:300px;
+				overflow-y: scroll;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div class="page-header" style="border-bottom:none;">
+				<h1>Welcome to SimpleChatter!</h1>
+				<p class="lead">
+					A simple chat server/client
+				</p>
+			</div>
+			<div class="panel panel-default">
+				<div class="panel-heading">
+					<div class="panel-title">
+						Chatter Log
+					</div>
+				</div>
+				<div class="panel-body" id="chatLog"></div>
+				<div class="panel-footer">
+					<form id="messageForm">
+						<div class="input-group">
+							<input class="form-control" type="text" id="messageInput">
+							<span class="input-group-btn">
+								<button type="submit" class="btn btn-primary media-object" id="sendBtn">
+									Send
+								</button>
+							</span> 
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

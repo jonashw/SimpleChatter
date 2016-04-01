@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>SimpleChatter Client</title>
+		<script src="~/Scripts/jquery-1.6.4.js"></script>
+		<script src="~/Scripts/jquery.signalR-2.2.0.js"></script>
+		<script src="http://localhost:35644/signalr/hubs"></script>
+		<script>
+			$(function () {
+				var userName = prompt('Please enter a user name:', 'Test User');
+				var chat = $.connection.chatHub;
+				var $log = $('#chatLog');
+				chat.client.broadcastMessage = function (name, message) {
+					var nameMessagePair = $('<div></div>').text(name + ': ' + message);
+					$log.append(nameMessagePair);
+				};
+
+				var $input = $('#messageInput').focus();
+				var $form = $('#messageForm');
+				$.connection.hub.start().done(function () {
+					$form.submit(function (e) {
+						chat.server.send(userName, $input.val());
+						$input.val('').focus();
+						return false;
+					});
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<h1>Welcome to SimpleChatter!</h1>
+		<div id="container">
+			<div id="chatLog">
+			</div>
+			<form id="messageForm">
+				<table style="width:100%;">
+					<tr>
+						<td style="width:100%;">
+							<input type="text" id="messageInput" placeholder="chat..."/>
+						</td>
+						<td>
+							<button id="sendBtn" type="submit">Send</button>
+						</td>
+					</tr>
+				</table>
+			</form>
+		</div>
+		<style>
+			#container {
+				width: 500px;
+			}
+			#chatLog {
+				height:300px;
+				border: 1px solid #bbb;
+				margin-bottom:5px;
+				overflow-y: scroll;
+			}
+			#chatLog, input, button {
+				padding: 5px;
+			}
+			input {
+				width: 100%;
+			}
+			input, button {
+				font-size: 20px;
+			}
+		</style>
+	</body>
+</html>
