@@ -1,4 +1,4 @@
-﻿function CurrentlyTypingComponent(userName, $form)
+﻿function CurrentlyTypingComponent($form)
 {
 	let $el = $("#typingStatus");
 	var _timeout;
@@ -8,10 +8,6 @@
 	{
 		connection.on('StartedTyping', name =>
 		{
-			if (name == userName)
-			{
-				return;
-			}
 			console.log(name + ' started typing');
 			_names.push(name);
 			updateDisplay();
@@ -29,15 +25,22 @@
 		});
 
 		$form.submit(stoppedTyping);
-		$form.keydown(() =>
+		$form.keydown(e =>
 		{
+			switch (e.which)
+			{
+				case 16: //Shift
+				case 17: //Ctrl
+				case 18: //Alt
+					return;
+			}
 			if (_timeout)
 			{
 				clearTimeout(_timeout);
 				console.log('still typing.  timeout reset');
 			} else
 			{
-				connection.send('startedTyping',userName);
+				connection.send('startedTyping');
 				console.log('started typing.  timeout set');
 			}
 			_timeout = setTimeout(stoppedTyping, 1000);
@@ -50,7 +53,7 @@
 			}
 			clearTimeout(_timeout);
 			_timeout = undefined;
-			connection.send('StoppedTyping',userName);
+			connection.send('StoppedTyping');
 			console.log('typing stopped');
 		}
 	};

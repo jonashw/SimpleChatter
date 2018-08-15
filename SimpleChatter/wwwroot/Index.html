@@ -10,18 +10,14 @@
 		<link rel="stylesheet" href="/bootstrap.min.css"/>
 		<script>
 			$(function () {
-				var uniqueId = Math.floor(Math.random() * 10000000).toString().substring(0, 4);
-				var userName = prompt('Please enter a user name:', 'User' + uniqueId);
 				let connection = new signalR.HubConnectionBuilder()
 					.withUrl('/chatHub')
 					.configureLogging(signalR.LogLevel.Information)
 					.build();
-				var $log = $('#chatLog');
-				var $form = $('#messageForm');
-				var $input = $('#messageInput').focus();
+				let $form = $('#messageForm');
 				let components = [
-					new CurrentlyTypingComponent(userName, $form),
-					new ChatMessagesComponent(userName, $log, $form, $input)
+					new CurrentlyTypingComponent($form),
+					new ChatMessagesComponent($('#chatLog'), $form, $('#messageInput'), $("#currentName"), $("#changeNameBtn"))
 				];
 				connection.start().then(() => {
 					console.log('now connected');
@@ -44,12 +40,16 @@
 			<div class="page-header" style="border-bottom:none;">
 				<h1>Welcome to SimpleChatter!</h1>
 				<p class="lead">
-					A simple chat server/client
+					A simple chat server/client that demonstrates basic SignalR capabilities.
 				</p>
 			</div>
 			<div class="card">
 				<div class="card-header">
 					Chatter Log
+					<div class="float-right">
+						<span id="currentName"></span>
+						<button class="btn btn-link btn-sm" id="changeNameBtn">Change</button>
+					</div>
 				</div>
 				<div class="card-body" id="chatLog"></div>
 				<div class="card-footer">

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SimpleChatter
@@ -21,42 +23,104 @@ namespace SimpleChatter
         Task MessagePosted(string name, string message);
         Task StartedTyping(string name);
         Task StoppedTyping(string name);
+        Task NameChanged(string oldName, string newName);
+        Task Joined(string name);
+        Task Left(string name);
+        Task UserNameGiven(string name);
     }
 
     public class ChatHub : Hub<IChatClient>
     {
-        private readonly static List<string> TypingNames = new List<string>();
+        private readonly static List<string> TypingConnectionIds = new List<string>();
         private readonly static List<Message> Messages = new List<Message>();
+        private readonly static Dictionary<string, string> NameByConnectionId = new Dictionary<string, string>();
 
-        public void PostMessage(string name, string message)
+        public bool PostMessage(string message)
         {
+            if (!NameByConnectionId.ContainsKey(Context.ConnectionId))
+            {
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return false;
+            }
+            var name = NameByConnectionId[Context.ConnectionId];
             Messages.Add(new Message(name, message));
             Clients.All.MessagePosted(name, message);
+            return true;
         }
 
-        public void StartedTyping(string name)
+        public void StartedTyping()
         {
-            TypingNames.Add(name);
-            Clients.All.StartedTyping(name);
+            if (!NameByConnectionId.ContainsKey(Context.ConnectionId))
+            {
+                return;
+            }
+            var name = NameByConnectionId[Context.ConnectionId];
+            TypingConnectionIds.Add(Context.ConnectionId);
+            Clients.Others.StartedTyping(name);
         }
 
-        public void StoppedTyping(string name)
+        public void StoppedTyping()
         {
-            TypingNames.Remove(name);
-            Clients.All.StoppedTyping(name);
+            if (!NameByConnectionId.ContainsKey(Context.ConnectionId))
+            {
+                return;
+            }
+            var name = NameByConnectionId[Context.ConnectionId];
+            TypingConnectionIds.Remove(Context.ConnectionId);
+            Clients.Others.StoppedTyping(name);
+        }
+
+        public bool ChangeName(string newName)
+        {
+            if (!NameByConnectionId.ContainsKey(Context.ConnectionId))
+            {
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                return false;
+            }
+            var nameAvailable = !NameByConnectionId.Any(pair => pair.Value == newName);
+            if (!nameAvailable)
+            {
+                return false;
+            }
+            var oldName = NameByConnectionId[Context.ConnectionId];
+            NameByConnectionId[Context.ConnectionId] = newName;
+            Clients.Others.NameChanged(oldName, newName);
+            return true;
         }
 
         public override Task OnConnectedAsync()
         {
+            var userName = "User" + Guid.NewGuid().ToString().Replace("-", "").Substring(0, 4).ToUpper();
+            NameByConnectionId[Context.ConnectionId] = userName;
+            Clients.Others.Joined(userName);
+            Clients.Caller.UserNameGiven(userName);
             foreach(var m in Messages)
             {
                 Clients.Caller.MessagePosted(m.UserName, m.Text);
             }
-            foreach(var name in TypingNames)
+            foreach(var id in TypingConnectionIds)
             {
-                Clients.Caller.StartedTyping(name);
+                Clients.Caller.StartedTyping(NameByConnectionId[id]);
             }
             return base.OnConnectedAsync();
+        }
+
+        public override Task OnDisconnectedAsync(Exception exception)
+        {
+            var name = NameByConnectionId[Context.ConnectionId];
+            if (TypingConnectionIds.Remove(Context.ConnectionId))
+            {
+                Clients.Others.StoppedTyping(NameByConnectionId[Context.ConnectionId]);
+            }
+            NameByConnectionId.Remove(Context.ConnectionId);
+            Clients.Others.Left(name);
+            return base.OnDisconnectedAsync(exception);
         }
     }
 }
