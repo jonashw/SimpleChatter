@@ -16,38 +16,45 @@ namespace SimpleChatter
         }
     }
 
-    public class ChatHub : Hub
+    public interface IChatClient
     {
-        private static List<string> TypingNames = new List<string>();
-        private static List<Message> Messages = new List<Message>();
+        Task MessagePosted(string name, string message);
+        Task StartedTyping(string name);
+        Task StoppedTyping(string name);
+    }
+
+    public class ChatHub : Hub<IChatClient>
+    {
+        private readonly static List<string> TypingNames = new List<string>();
+        private readonly static List<Message> Messages = new List<Message>();
 
         public void PostMessage(string name, string message)
         {
             Messages.Add(new Message(name, message));
-            Clients.All.SendAsync("MessagePosted", name, message);
+            Clients.All.MessagePosted(name, message);
         }
 
         public void StartedTyping(string name)
         {
             TypingNames.Add(name);
-            Clients.All.SendAsync("StartedTyping",name);
+            Clients.All.StartedTyping(name);
         }
 
         public void StoppedTyping(string name)
         {
             TypingNames.Remove(name);
-            Clients.All.SendAsync("StoppedTyping",name);
+            Clients.All.StoppedTyping(name);
         }
 
         public override Task OnConnectedAsync()
         {
             foreach(var m in Messages)
             {
-                Clients.Caller.SendAsync("MessagePosted",m.UserName, m.Text);
+                Clients.Caller.MessagePosted(m.UserName, m.Text);
             }
             foreach(var name in TypingNames)
             {
-                Clients.Caller.SendAsync("StartedTyping",name);
+                Clients.Caller.StartedTyping(name);
             }
             return base.OnConnectedAsync();
         }
