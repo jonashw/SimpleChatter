@@ -3,7 +3,7 @@
 	{
 		connection.on('MessagePosted', (name, message) => {
 			var nameMessagePair = $('<div></div>')
-				.append($('<span></span>').addClass('badge badge-default').text(name))
+				.append($('<strong style="margin-right:4px;"></strong>').text(name))
 				.append($('<span></span>').text(' ' + message));
 			$log.append(nameMessagePair);
 			$log.prop('scrollTop', $log.prop('scrollHeight'));
