@@ -5,6 +5,8 @@
 		<title>SimpleChatter</title>
 		<script src="/Scripts/jquery-1.6.4.js"></script>
 		<script src="/Scripts/jquery.signalR-2.2.0.js"></script>
+		<script src="/Scripts/ChatMessagesComponent.js"></script>
+		<script src="/Scripts/CurrentlyTypingComponent.js"></script>
 		<script src="signalr/hubs"></script>
 		<link rel="stylesheet" href="/Stylesheets/bootstrap.min.css"/>
 		<script>
@@ -12,22 +14,15 @@
 				var userName = prompt('Please enter a user name:', 'Test User');
 				var chat = $.connection.chatHub;
 				var $log = $('#chatLog');
-				chat.client.broadcastMessage = function (name, message) {
-					var nameMessagePair = $('<div></div>')
-						.append($('<span></span>').addClass('badge badge-default').text(name))
-						.append($('<span></span>').text(' ' + message));
-					$log.append(nameMessagePair);
-					$log.prop('scrollTop', $log.prop('scrollHeight'));
-				};
-
-				var $input = $('#messageInput').focus();
 				var $form = $('#messageForm');
+				var $input = $('#messageInput').focus();
+				let components = [
+					new CurrentlyTypingComponent(userName, $form, chat),
+					new ChatMessagesComponent(userName, $log, $form, $input, chat)
+				];
 				$.connection.hub.start().done(function () {
-					$form.submit(function (e) {
-						chat.server.send(userName, $input.val());
-						$input.val('').focus();
-						return false;
-					});
+					console.log('now connected.  ID=' + $.connection.hub.id);
+					components.forEach(c => c.start());
 				});
 			});
 		</script>
@@ -35,6 +30,9 @@
 			#chatLog {
 				height:300px;
 				overflow-y: scroll;
+			}
+			.mt-1 {
+				margin-top: 8px;
 			}
 		</style>
 	</head>
@@ -54,7 +52,7 @@
 				</div>
 				<div class="panel-body" id="chatLog"></div>
 				<div class="panel-footer">
-					<form id="messageForm">
+					<form id="messageForm" autocomplete="off">
 						<div class="input-group">
 							<input class="form-control" type="text" id="messageInput">
 							<span class="input-group-btn">
@@ -63,6 +61,7 @@
 								</button>
 							</span> 
 						</div>
+						<div id="typingStatus"></div>
 					</form>
 				</div>
 			</div>
