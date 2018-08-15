@@ -1,6 +1,6 @@
-﻿function CurrentlyTypingComponent($form)
+﻿function CurrentlyTypingComponent($form,$typingStatus)
 {
-	let $el = $("#typingStatus");
+	let $el = $typingStatus;
 	var _timeout;
 	var _names = [];
 
@@ -29,6 +29,7 @@
 		{
 			switch (e.which)
 			{
+				//Meta keys by themselves don't count as "typing"
 				case 16: //Shift
 				case 17: //Ctrl
 				case 18: //Alt

@@ -16,7 +16,7 @@
 					.build();
 				let $form = $('#messageForm');
 				let components = [
-					new CurrentlyTypingComponent($form),
+					new CurrentlyTypingComponent($form,$("#typingStatus")),
 					new ChatMessagesComponent($('#chatLog'), $form, $('#messageInput'), $("#currentName"), $("#changeNameBtn"))
 				];
 				connection.start().then(() => {
