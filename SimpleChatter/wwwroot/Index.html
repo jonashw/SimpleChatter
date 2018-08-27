@@ -19,9 +19,10 @@
 					new CurrentlyTypingComponent($form,$("#typingStatus")),
 					new ChatMessagesComponent($('#chatLog'), $form, $('#messageInput'), $("#currentName"), $("#changeNameBtn"))
 				];
-				connection.start().then(() => {
+				connection.start().then(function ()
+				{
 					console.log('now connected');
-					components.forEach(c => c.start(connection));
+					components.forEach(function (c) { c.start(connection) });
 				});
 			});
 		</script>

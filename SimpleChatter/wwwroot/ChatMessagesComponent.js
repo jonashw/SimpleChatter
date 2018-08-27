@@ -1,41 +1,41 @@
 ﻿function ChatMessagesComponent($log, $form, $input, $currentName, $changeNameBtn) {
 	$input.focus();
-	this.start = connection =>
+	this.start = function(connection)
 	{
 		var currentName = "";
 
-		connection.on('MessagePosted', (name, message) => {
+		connection.on('MessagePosted', function(name, message) {
 			writeMessage(
 				$('<strong style="margin-right:4px;"></strong>').text(name),
 				$('<span></span>').text(' ' + message));
 		});
 
-		connection.on('UserNameGiven', userName => {
+		connection.on('UserNameGiven', function(userName) {
 			currentName = userName;
 			writeMessage($('<em></em>').text('Welcome! Your auto-assigned user name is ' + userName));
 			updateCurrentNameDisplay();
 		});
 
-		connection.on('NameChanged', (oldName,newName) => {
+		connection.on('NameChanged', function(oldName,newName) {
 			writeMessage($('<em></em>').text(oldName + ' shall now be known as ' + newName));
 		});
 
-		connection.on('Joined', name => {
+		connection.on('Joined', function(name) {
 			writeMessage($('<em></em>').text(name + ' has joined'));
 		});
 
-		connection.on('Left', name => {
+		connection.on('Left', function(name) {
 			writeMessage($('<em></em>').text(name + ' has departed'));
 		});
 
-		$changeNameBtn.click(() =>
+		$changeNameBtn.click(function()
 		{
 			let newName = prompt("What would you like to be called?", currentName);
 			if (!newName)
 			{
 				return;
 			}
-			connection.invoke("ChangeName", newName).then(success =>
+			connection.invoke("ChangeName", newName).then(function(success)
 			{
 				if (success)
 				{
@@ -54,7 +54,7 @@
 
 		$form.submit(function (e) {
 			$input.prop('disabled', true);
-			connection.send('PostMessage', $input.val()).then(_ =>
+			connection.send('PostMessage', $input.val()).then(function()
 			{
 				$input.val('').prop('disabled', false).focus();
 			});

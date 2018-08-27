@@ -4,16 +4,16 @@
 	var _timeout;
 	var _names = [];
 
-	this.start = connection =>
+	this.start = function (connection)
 	{
-		connection.on('StartedTyping', name =>
+		connection.on('StartedTyping', function(name)
 		{
 			console.log(name + ' started typing');
 			_names.push(name);
 			updateDisplay();
 		});
 
-		connection.on('StoppedTyping', name =>
+		connection.on('StoppedTyping', function(name)
 		{
 			let ix = _names.indexOf(name);
 			if (ix == -1)
@@ -25,7 +25,7 @@
 		});
 
 		$form.submit(stoppedTyping);
-		$form.keydown(e =>
+		$form.keydown(function(e)
 		{
 			switch (e.which)
 			{
